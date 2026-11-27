@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hearthstone Library — Management System</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- Auth Screen -->
+  <main id="auth-view" class="auth-container">
+    <div class="auth-card">
+      <div class="brand-header">
+        <span class="brand-badge">Library Desk</span>
+        <h1>Hearthstone Library</h1>
+        <p class="muted">Sign in to manage books, borrowers, and circulation.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="show-login-btn" class="tab-pill active" type="button">Sign In</button>
+        <button id="show-register-btn" class="tab-pill" type="button">Register Staff</button>
+      </div>
+
+      <form id="login-form" class="stack">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="login-email" required placeholder="librarian@example.com" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="login-password" required placeholder="••••••" />
+        </label>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </form>
+
+      <form id="register-form" class="stack hidden">
+        <label class="field">
+          <span>Full Name</span>
+          <input type="text" id="reg-name" required minlength="2" placeholder="Asha Verma" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="reg-email" required placeholder="librarian@example.com" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="reg-password" required minlength="6" placeholder="Minimum 6 characters" />
+        </label>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Dashboard View -->
+  <div id="app-view" class="app-shell hidden">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <h1>Hearthstone Library</h1>
+        <span class="muted">Circulation &amp; Catalog</span>
+      </div>
+      <div class="topbar-user">
+        <span id="user-greeting" class="user-chip"></span>
+        <button id="logout-btn" class="btn btn-outline btn-sm" type="button">Sign Out</button>
+      </div>
+    </header>
+
+    <section class="stats-grid" aria-label="Library Summary">
+      <div class="stat-card">
+        <span class="stat-label">Book Titles</span>
+        <strong id="stat-books" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Available Copies</span>
+        <strong id="stat-copies" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Borrowers</span>
+        <strong id="stat-borrowers" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Currently Issued</span>
+        <strong id="stat-issued" class="stat-value">0</strong>
+      </div>
+    </section>
+
+    <nav class="nav-tabs" aria-label="Main Sections">
+      <button class="nav-tab active" data-tab="books" type="button">Books</button>
+      <button class="nav-tab" data-tab="borrowers" type="button">Borrowers</button>
+      <button class="nav-tab" data-tab="issues" type="button">Issue &amp; Return</button>
+    </nav>
+
+    <!-- Books Section -->
+    <section id="tab-books" class="panel">
+      <div class="panel-header">
+        <div class="filters">
+          <input type="search" id="book-search" placeholder="Search title, author, ISBN..." />
+          <select id="book-category-filter">
+            <option value="all">All Categories</option>
+          </select>
+          <select id="book-availability-filter">
+            <option value="">All Availability</option>
+            <option value="true">Available Only</option>
+            <option value="false">Out of Stock</option>
+          </select>
+        </div>
+        <button id="add-book-btn" class="btn btn-primary" type="button">+ Add Book</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>ISBN</th>
+              <th>Category</th>
+              <th>Copies</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="books-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Borrowers Section -->
+    <section id="tab-borrowers" class="panel hidden">
+      <div class="panel-header">
+        <div class="filters">
+          <input type="search" id="borrower-search" placeholder="Search name, email, ID..." />
+          <select id="borrower-status-filter">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <button id="add-borrower-btn" class="btn btn-primary" type="button">+ Register Borrower</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Member ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="borrowers-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Issue & Return Section -->
+    <section id="tab-issues" class="panel hidden">
+      <form id="issue-form" class="issue-box">
+        <h2>Issue a Book</h2>
+        <div class="issue-grid">
+          <label class="field">
+            <span>Book (Available)</span>
+            <select id="issue-book-select" required></select>
+          </label>
+          <label class="field">
+            <span>Borrower (Active)</span>
+            <select id="issue-borrower-select" required></select>
+          </label>
+          <label class="field">
+            <span>Due Date</span>
+            <input type="date" id="issue-due-date" required />
+          </label>
+          <label class="field">
+            <span>Notes (Optional)</span>
+            <input type="text" id="issue-notes" maxlength="300" placeholder="Condition or remark" />
+          </label>
+        </div>
+        <div class="issue-actions">
+          <button type="submit" class="btn btn-primary">Issue Book</button>
+        </div>
+      </form>
+
+      <div class="panel-header">
+        <div class="filters">
+          <select id="issue-status-filter">
+            <option value="">All Issue Records</option>
+            <option value="issued">Currently Issued</option>
+            <option value="returned">Returned</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Book</th>
+              <th>Borrower</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Return Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="issues-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Reusable Modal -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Modal</h3>
+        <button id="modal-close-btn" class="icon-btn" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

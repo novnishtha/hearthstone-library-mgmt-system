@@ -1,0 +1,21 @@
+# Library Management System - Dependencies Manifest
+# Note: Node.js uses package.json for npm installation; this file serves as a dependency reference.
+
+# --- Runtime & System ---
+# Node.js >= 18.x (Local detected: v26.13.1)
+# npm >= 9.x (Local detected: 11.20.0)
+# MongoDB >= 6.0 (Configured as Replica Set 'rs0' for multi-document transactions; can run via Docker)
+
+# --- Production Dependencies (npm) ---
+express==4.21.2
+mongoose==8.9.5
+dotenv==16.4.7
+bcrypt==5.1.1
+jsonwebtoken==9.0.2
+express-validator==7.2.1
+cors==2.8.5
+helmet==8.0.0
+morgan==1.10.0
+
+# --- Development Dependencies (npm) ---
+nodemon==3.1.9
