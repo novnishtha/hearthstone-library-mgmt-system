@@ -46,11 +46,22 @@ const bookSchema = new mongoose.Schema(
     },
     availableCopies: {
       type: Number,
-      min: [0, 'Available copies cannot be negative'],
-      validate: {
-        validator: Number.isInteger,
-        message: 'Available copies must be a whole number',
+      default: function defaultAvailableCopies() {
+        return this.totalCopies;
       },
+      min: [0, 'Available copies cannot be negative'],
+      validate: [
+        {
+          validator: Number.isInteger,
+          message: 'Available copies must be a whole number',
+        },
+        {
+          validator: function checkMaxCopies(v) {
+            return this.totalCopies === undefined || v <= this.totalCopies;
+          },
+          message: 'Available copies cannot exceed total copies',
+        },
+      ],
     },
     description: {
       type: String,
@@ -60,16 +71,6 @@ const bookSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-bookSchema.pre('validate', function syncAvailableCopies(next) {
-  if (this.isNew && (this.availableCopies === undefined || this.availableCopies === null)) {
-    this.availableCopies = this.totalCopies;
-  }
-  if (this.availableCopies > this.totalCopies) {
-    this.invalidate('availableCopies', 'Available copies cannot exceed total copies');
-  }
-  next();
-});
 
 bookSchema.index({ title: 'text', author: 'text', isbn: 'text' });
 
