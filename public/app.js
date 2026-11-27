@@ -163,19 +163,47 @@ document.querySelectorAll('.nav-tab').forEach((btn) => {
 });
 
 async function refreshAll() {
-  await Promise.all([loadBooks(), loadBorrowers(), loadIssues()]);
-  updateStats();
+  await Promise.all([loadDashboard(), loadBooks(), loadBorrowers(), loadIssues()]);
   populateIssueDropdowns();
 }
 
-function updateStats() {
-  document.getElementById('stat-books').textContent = state.books.length;
-  const totalAvailable = state.books.reduce((sum, b) => sum + (b.availableCopies || 0), 0);
-  document.getElementById('stat-copies').textContent = totalAvailable;
-  const activeBorrowers = state.borrowers.filter((b) => b.isActive).length;
-  document.getElementById('stat-borrowers').textContent = activeBorrowers;
-  const issuedCount = state.issues.filter((r) => r.status === 'issued').length;
-  document.getElementById('stat-issued').textContent = issuedCount;
+async function loadDashboard() {
+  const res = await api('/dashboard');
+  const d = res.data;
+
+  document.getElementById('stat-books').textContent = d.totalBookTitles;
+  document.getElementById('stat-total-copies').textContent = d.totalPhysicalCopies;
+  document.getElementById('stat-copies').textContent = d.availableCopies;
+  document.getElementById('stat-total-borrowers').textContent = d.totalBorrowers;
+  document.getElementById('stat-borrowers').textContent = d.activeBorrowers;
+  document.getElementById('stat-issued').textContent = d.currentlyIssued;
+  document.getElementById('stat-overdue').textContent = d.overdueBooks;
+
+  const recentTbody = document.getElementById('recent-issues-tbody');
+  if (!d.recentlyIssued.length) {
+    recentTbody.innerHTML = '<tr><td colspan="5" class="muted">No books issued yet.</td></tr>';
+    return;
+  }
+
+  recentTbody.innerHTML = d.recentlyIssued
+    .map((r) => {
+      const isOverdue = r.status === 'issued' && new Date() > new Date(r.dueDate);
+      const badge =
+        r.status === 'returned'
+          ? `<span class="badge badge-sage">${r.returnedLate ? 'Returned (Late)' : 'Returned'}</span>`
+          : `<span class="badge ${isOverdue ? 'badge-danger' : 'badge-amber'}">${isOverdue ? 'Overdue' : 'Issued'}</span>`;
+
+      return `
+        <tr>
+          <td><strong>${escapeHtml(r.book?.title || 'Unknown')}</strong></td>
+          <td>${escapeHtml(r.borrower?.name || 'Unknown')}</td>
+          <td>${formatDate(r.issueDate)}</td>
+          <td>${formatDate(r.dueDate)}</td>
+          <td>${badge}</td>
+        </tr>
+      `;
+    })
+    .join('');
 }
 
 // ---------------- BOOKS ----------------

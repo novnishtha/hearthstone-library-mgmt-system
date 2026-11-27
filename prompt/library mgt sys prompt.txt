@@ -1,0 +1,443 @@
+# Project: Library Management System
+
+## 1. Project Objective
+
+Build a complete, functional Library Management System using Node.js, Express.js and MongoDB.
+
+The application should allow a library administrator to manage books, borrowers, and book-issuing transactions through a web-based interface.
+
+This should be a properly structured CRUD-based application with a RESTful backend, MongoDB database integration, business logic validation, and a clean, responsive frontend.
+
+Do not build this as a single-file application. Follow a modular, maintainable architecture.
+
+## 2. Technology Stack
+
+**Backend:**
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose ODM
+
+**Frontend:**
+- HTML5
+- CSS3
+- Vanilla JavaScript
+
+**Additional libraries:**
+- dotenv for environment variables
+- cors for cross-origin configuration, if needed
+- express-validator or Zod for input validation
+- bcrypt for password hashing
+- jsonwebtoken for authentication
+- Jest and Supertest for backend testing
+
+Use stable, compatible package versions.
+
+## 3. Application Modules
+
+The application must contain the following modules:
+
+### A. Book Management
+
+Implement complete CRUD functionality for books.
+
+Each book should have:
+- Unique MongoDB ID
+- Title
+- Author
+- ISBN (unique)
+- Category
+- Publisher
+- Published year
+- Total copies
+- Available copies
+- Shelf location
+- Created timestamp
+- Updated timestamp
+
+Functionalities:
+- Add a new book.
+- View all books.
+- View individual book details.
+- Update book information.
+- Delete a book.
+- Search books by title, author or ISBN.
+- Filter books by category.
+- Implement pagination.
+
+Validation:
+- ISBN must be unique.
+- Total copies must be a non-negative integer.
+- Available copies must never exceed total copies or become negative.
+- Do not allow deletion if the book has active issue records.
+- When total copies are updated, ensure the new total is not less than the number of currently issued copies.
+
+### B. Borrower Management
+
+Implement CRUD functionality for library borrowers.
+
+Each borrower should have:
+- Unique MongoDB ID
+- Name
+- Email (unique)
+- Phone number
+- Membership ID (unique)
+- Address
+- Status (active/inactive)
+- Created timestamp
+- Updated timestamp
+
+Functionalities:
+- Register a borrower.
+- View all borrowers.
+- View borrower details.
+- Update borrower information.
+- Search borrowers by name, email or membership ID.
+- Activate or deactivate borrowers.
+- Delete borrowers when permitted.
+- View a borrower's complete issue history.
+
+Validation:
+- Email must be valid and unique.
+- Membership ID must be unique.
+- Inactive borrowers cannot borrow books.
+- Do not allow deletion or deactivation when a borrower has outstanding issued books.
+
+### C. Issue and Return Management
+
+Create a separate IssueRecord MongoDB collection.
+
+Each issue record should contain:
+- Unique MongoDB ID
+- Reference to Book document
+- Reference to Borrower document
+- Issue date
+- Due date
+- Return date (null until returned)
+- Status (issued/returned)
+- Created timestamp
+- Updated timestamp
+
+Functionalities:
+
+**Issue a book:**
+1. Select an existing book.
+2. Select an existing borrower.
+3. Verify that the book has available copies.
+4. Verify that the borrower is active.
+5. Check that the borrower has not exceeded the borrowing limit.
+6. Create an issue record.
+7. Decrease the book's available copy count.
+8. Return the created issue record.
+
+**Return a book:**
+1. Find the corresponding issue record.
+2. Verify that it exists and has status 'issued'.
+3. Set the return date.
+4. Change status to 'returned'.
+5. Increase the book's available copy count.
+
+Additional functionalities:
+- View all issue records.
+- View currently issued books.
+- View returned books.
+- View overdue books.
+- Filter issue records by borrower, book, status and date.
+- View individual issue record details.
+- Display borrower and book information using Mongoose populate.
+- Preserve issue history permanently.
+
+Business rules:
+- Maximum borrowing limit: 3 books per borrower.
+- Default borrowing duration: 14 days.
+- A returned issue record cannot be returned again.
+- An issue record must never be physically deleted through the normal application interface.
+- An overdue record is one whose due date has passed and whose status is still 'issued'.
+- Do not allow duplicate or invalid transactions.
+
+Use MongoDB transactions for issue and return operations so that updating inventory and creating/updating issue records happen atomically. Configure MongoDB as a replica set for local development if necessary.
+
+Also use conditional inventory updates to prevent race conditions when multiple requests attempt to issue the last available copy.
+
+### D. Dashboard
+
+Create a dashboard displaying:
+- Total number of book titles.
+- Total number of physical book copies.
+- Available copies.
+- Total registered borrowers.
+- Active borrowers.
+- Currently issued books.
+- Overdue books.
+- Recently issued books.
+
+Fetch these statistics dynamically from MongoDB through a dedicated dashboard API. Do not hardcode statistics.
+
+## 4. Backend Architecture
+
+Follow a layered architecture.
+
+Request flow:
+
+Routes → Middleware → Controllers → Services → Models → MongoDB
+
+Use the following folder structure:
+
+library-management-system/
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── db.js
+│   │   ├── models/
+│   │   │   ├── Book.js
+│   │   │   ├── Borrower.js
+│   │   │   └── IssueRecord.js
+│   │   ├── controllers/
+│   │   │   ├── bookController.js
+│   │   │   ├── borrowerController.js
+│   │   │   ├── issueController.js
+│   │   │   └── dashboardController.js
+│   │   ├── services/
+│   │   │   ├── bookService.js
+│   │   │   ├── borrowerService.js
+│   │   │   ├── issueService.js
+│   │   │   └── dashboardService.js
+│   │   ├── routes/
+│   │   │   ├── bookRoutes.js
+│   │   │   ├── borrowerRoutes.js
+│   │   │   ├── issueRoutes.js
+│   │   │   └── dashboardRoutes.js
+│   │   ├── middleware/
+│   │   │   ├── errorMiddleware.js
+│   │   │   ├── validateMiddleware.js
+│   │   │   └── notFoundMiddleware.js
+│   │   ├── validators/
+│   │   ├── utils/
+│   │   └── app.js
+│   └── server.js
+│
+├── client/
+│   ├── index.html
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   ├── api.js
+│   │   ├── dashboard.js
+│   │   ├── books.js
+│   │   ├── borrowers.js
+│   │   └── issues.js
+│   └── assets/
+│
+├── tests/
+├── .env.example
+├── .gitignore
+└── README.md
+
+You may make reasonable structural adjustments if needed, but preserve separation of concerns.
+
+Controllers should handle HTTP requests and responses. Services should contain business logic. Models should define schemas and database interactions.
+
+## 5. REST API Endpoints
+
+Use the base URL: /api/v1
+
+Books:
+- POST /books
+- GET /books
+- GET /books/:id
+- PUT /books/:id
+- DELETE /books/:id
+
+Borrowers:
+- POST /borrowers
+- GET /borrowers
+- GET /borrowers/:id
+- PUT /borrowers/:id
+- PATCH /borrowers/:id/status
+- DELETE /borrowers/:id
+- GET /borrowers/:id/issues
+
+Issue Records:
+- POST /issues
+- GET /issues
+- GET /issues/:id
+- PATCH /issues/:id/return
+- GET /issues/overdue
+
+Dashboard:
+- GET /dashboard/stats
+
+Support pagination, search, filtering and sorting where appropriate.
+
+Use appropriate HTTP methods and status codes.
+
+## 6. Frontend Requirements
+
+Build a clean, responsive administrative dashboard using HTML, CSS and Vanilla JavaScript.
+
+The interface should include:
+
+1. Dashboard
+2. Books Management
+3. Borrowers Management
+4. Issue Books
+5. Return Books
+6. Issue History
+
+Design requirements:
+- Modern and minimal administrative dashboard.
+- Sidebar navigation.
+- Top navigation bar.
+- Statistics cards.
+- Tables for books, borrowers and issue records.
+- Search and filtering controls.
+- Add/Edit forms using modal dialogs or dedicated forms.
+- Confirmation dialogs before deletion and return operations.
+- Loading indicators.
+- Success and error notifications.
+- Empty states when no records are available.
+- Responsive layout for desktop and mobile.
+
+Use fetch() to communicate with backend APIs.
+
+All displayed data must come from the backend. Do not use hardcoded records as substitutes for database data.
+
+## 7. Error Handling and Validation
+
+Implement centralized error handling.
+
+Handle:
+- Missing required fields.
+- Invalid input formats.
+- Duplicate ISBN, email or membership ID.
+- Invalid MongoDB ObjectIds.
+- Book or borrower not found.
+- Insufficient available copies.
+- Inactive borrower.
+- Borrowing limit exceeded.
+- Attempting to return an already returned book.
+- Attempting to delete a book or borrower with active transactions.
+- MongoDB connection failures.
+
+Use consistent JSON response structures.
+
+Example success response:
+
+{
+  "success": true,
+  "message": "Book created successfully",
+  "data": {}
+}
+
+Example error response:
+
+{
+  "success": false,
+  "message": "No available copies of this book",
+  "errors": []
+}
+
+Never expose internal stack traces, credentials or sensitive server information in production responses.
+
+## 8. Authentication and Security
+
+Implement a basic administrator login system using JWT authentication.
+
+- Store hashed passwords using bcrypt.
+- Protect administrative API routes.
+- Keep JWT secrets in environment variables.
+- Validate incoming data.
+- Apply appropriate CORS configuration.
+- Use Helmet and reasonable rate limiting.
+- Do not commit .env files or credentials.
+
+Only an authenticated administrator should be able to modify books, borrowers and issue records.
+
+## 9. Testing
+
+Write backend tests using Jest and Supertest.
+
+Test at least:
+- Creating, reading, updating and deleting books.
+- Creating and updating borrowers.
+- Issuing an available book.
+- Rejecting an issue request when no copies are available.
+- Rejecting an issue request for inactive borrowers.
+- Enforcing the borrowing limit.
+- Returning a book and updating inventory.
+- Rejecting duplicate returns.
+- Rejecting deletion when active issues exist.
+- Maintaining inventory consistency during transactions.
+
+Include instructions for running the tests.
+
+## 10. Environment Configuration
+
+Create a .env.example file containing:
+
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/library_management
+JWT_SECRET=replace_with_a_secure_secret
+NODE_ENV=development
+
+Never include actual secrets in the repository.
+
+Provide MongoDB replica set setup instructions if transactions are used.
+
+## 11. Documentation
+
+Create a detailed README.md explaining:
+
+- Project overview.
+- Features.
+- Technology stack.
+- Application architecture.
+- Folder structure.
+- Database schema.
+- Installation instructions.
+- Environment configuration.
+- MongoDB setup.
+- How to run the backend and frontend.
+- API endpoint documentation.
+- How to run tests.
+- Sample API requests and responses.
+
+## 12. Development Instructions
+
+Follow these instructions carefully:
+
+1. First inspect the existing project directory before creating or modifying files.
+2. Present the proposed implementation plan and architecture.
+3. Implement the backend before the frontend.
+4. Build and test each module independently.
+5. Ensure that MongoDB integration works before proceeding to frontend development.
+6. Verify all CRUD operations using API tests or Postman.
+7. Implement issue and return business logic with proper transaction handling.
+8. Connect the frontend to the working backend APIs.
+9. Test the complete application workflow.
+10. Update the README with accurate setup and execution instructions.
+
+Use clean, readable, modular JavaScript. Prefer async/await and proper error handling.
+
+Do not leave placeholder functions, mock APIs, nonfunctional buttons or hardcoded dashboard values.
+
+Do not silently skip requirements. If a requirement cannot be implemented, explain why and propose an appropriate alternative.
+
+**Important:** Work incrementally. After completing each major module, explain the files created, the design decisions made, and how the module can be tested. Do not generate the entire application as one giant block of code.
+
+## Final Deliverable
+
+A fully functional Library Management System with:
+- Node.js and Express.js REST API.
+- MongoDB database with Mongoose models.
+- Book CRUD.
+- Borrower CRUD.
+- Issue and return management.
+- Inventory consistency and validation.
+- Admin authentication.
+- Responsive web dashboard.
+- Automated backend tests.
+- Complete README documentation.
+
+The application should be runnable locally using the documented setup instructions.

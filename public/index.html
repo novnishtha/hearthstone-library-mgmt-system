@@ -72,8 +72,16 @@
         <strong id="stat-books" class="stat-value">0</strong>
       </div>
       <div class="stat-card">
+        <span class="stat-label">Total Physical Copies</span>
+        <strong id="stat-total-copies" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card">
         <span class="stat-label">Available Copies</span>
         <strong id="stat-copies" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Total Borrowers</span>
+        <strong id="stat-total-borrowers" class="stat-value">0</strong>
       </div>
       <div class="stat-card">
         <span class="stat-label">Active Borrowers</span>
@@ -82,6 +90,31 @@
       <div class="stat-card">
         <span class="stat-label">Currently Issued</span>
         <strong id="stat-issued" class="stat-value">0</strong>
+      </div>
+      <div class="stat-card stat-card-alert">
+        <span class="stat-label">Overdue Books</span>
+        <strong id="stat-overdue" class="stat-value">0</strong>
+      </div>
+    </section>
+
+    <section class="panel recent-panel" aria-label="Recently Issued Books">
+      <div class="recent-header">
+        <h2>Recently Issued Books</h2>
+        <span class="muted">Latest 5 circulation records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Book</th>
+              <th>Borrower</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recent-issues-tbody"></tbody>
+        </table>
       </div>
     </section>
 
