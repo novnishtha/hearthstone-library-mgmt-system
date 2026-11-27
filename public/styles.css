@@ -170,6 +170,26 @@ body {
   color: var(--primary);
 }
 
+.stat-card-alert .stat-value {
+  color: var(--danger);
+}
+
+.recent-panel {
+  margin-bottom: 1.5rem;
+}
+
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.recent-header h2 {
+  font-size: 1.05rem;
+}
+
 /* Navigation Tabs */
 .nav-tabs {
   display: flex;

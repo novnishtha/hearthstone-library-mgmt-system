@@ -9,6 +9,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const borrowerRoutes = require('./routes/borrowerRoutes');
 const issueRoutes = require('./routes/issueRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Static Frontend
 const publicDir = path.join(__dirname, '..', 'public');
