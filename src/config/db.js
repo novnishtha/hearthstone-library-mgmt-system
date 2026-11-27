@@ -17,10 +17,16 @@ async function connectDB() {
   }
 
   if (!cachedPromise) {
-    cachedPromise = mongoose.connect(uri).then((conn) => {
-      console.log(`MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);
-      return conn;
-    });
+    cachedPromise = mongoose
+      .connect(uri)
+      .then((conn) => {
+        console.log(`MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);
+        return conn;
+      })
+      .catch((err) => {
+        cachedPromise = null;
+        throw err;
+      });
   }
 
   return cachedPromise;
