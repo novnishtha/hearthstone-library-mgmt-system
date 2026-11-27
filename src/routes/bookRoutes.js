@@ -23,7 +23,15 @@ router.post(
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('author').trim().notEmpty().withMessage('Author is required'),
     body('isbn').trim().notEmpty().withMessage('ISBN is required'),
-    body('category').trim().notEmpty().withMessage('Category is required'),
+    body('categories')
+      .optional()
+      .isArray({ min: 1 })
+      .withMessage('Select at least one category'),
+    body('category')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Category cannot be empty'),
     body('totalCopies').isInt({ min: 1 }).withMessage('Total copies must be at least 1'),
     body('publishedYear')
       .optional({ values: 'falsy' })
@@ -40,6 +48,10 @@ router.put(
     body('title').optional().trim().notEmpty().withMessage('Title cannot be empty'),
     body('author').optional().trim().notEmpty().withMessage('Author cannot be empty'),
     body('isbn').optional().trim().notEmpty().withMessage('ISBN cannot be empty'),
+    body('categories')
+      .optional()
+      .isArray({ min: 1 })
+      .withMessage('Select at least one category'),
     body('category').optional().trim().notEmpty().withMessage('Category cannot be empty'),
     body('totalCopies').optional().isInt({ min: 1 }).withMessage('Total copies must be at least 1'),
     body('publishedYear')

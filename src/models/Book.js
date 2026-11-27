@@ -20,11 +20,15 @@ const bookSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    category: {
-      type: String,
-      required: [true, 'Category is required'],
-      trim: true,
-      default: 'General',
+    categories: {
+      type: [String],
+      required: [true, 'At least one category is required'],
+      default: ['General'],
+      validate: {
+        validator: (arr) =>
+          Array.isArray(arr) && arr.length > 0 && arr.every((c) => typeof c === 'string' && c.trim().length > 0),
+        message: 'At least one valid category is required',
+      },
     },
     publishedYear: {
       type: Number,

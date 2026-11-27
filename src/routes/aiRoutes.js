@@ -13,6 +13,7 @@ router.post(
   [
     body('title').trim().notEmpty().withMessage('Title is required to generate a description'),
     body('author').trim().notEmpty().withMessage('Author is required to generate a description'),
+    body('categories').optional().isArray(),
     body('category').optional().trim(),
     body('publishedYear').optional({ values: 'falsy' }).isInt(),
     validateRequest,

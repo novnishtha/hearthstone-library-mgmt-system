@@ -2,10 +2,11 @@ const { generateBookDescription } = require('../services/aiService');
 
 async function createBookDescription(req, res, next) {
   try {
-    const { title, author, category, publishedYear } = req.body;
+    const { title, author, categories, category, publishedYear } = req.body;
     const description = await generateBookDescription({
       title,
       author,
+      categories,
       category,
       publishedYear,
     });

@@ -179,6 +179,29 @@ function updateStats() {
 }
 
 // ---------------- BOOKS ----------------
+const BOOK_CATEGORIES = [
+  'Fiction',
+  'Non-Fiction',
+  'Science',
+  'Technology',
+  'Software Engineering',
+  'History',
+  'Biography',
+  'Fantasy',
+  'Mystery',
+  'Philosophy',
+  'Literature',
+  'Self-Help',
+  'General',
+];
+
+function getBookCategories(book) {
+  if (Array.isArray(book?.categories) && book.categories.length) {
+    return book.categories;
+  }
+  return book?.category ? [book.category] : ['General'];
+}
+
 async function loadBooks() {
   const q = document.getElementById('book-search').value.trim();
   const category = document.getElementById('book-category-filter').value;
@@ -197,8 +220,9 @@ async function loadBooks() {
 function refreshCategoryFilter() {
   const select = document.getElementById('book-category-filter');
   const current = select.value;
-  const categories = [...new Set(state.books.map((b) => b.category).filter(Boolean))].sort();
-  if (categories.length === 0) return;
+  const categories = [
+    ...new Set([...BOOK_CATEGORIES, ...state.books.flatMap((b) => getBookCategories(b))]),
+  ].sort();
 
   const existingOptions = new Set([...select.options].map((o) => o.value));
   categories.forEach((cat) => {
@@ -222,12 +246,15 @@ function renderBooks() {
   tbody.innerHTML = state.books
     .map((book) => {
       const badgeClass = book.availableCopies > 0 ? 'badge-sage' : 'badge-danger';
+      const categoryBadges = getBookCategories(book)
+        .map((c) => `<span class="badge badge-amber">${escapeHtml(c)}</span>`)
+        .join(' ');
       return `
         <tr>
           <td><strong>${escapeHtml(book.title)}</strong></td>
           <td>${escapeHtml(book.author)}</td>
           <td>${escapeHtml(book.isbn)}</td>
-          <td>${escapeHtml(book.category)}</td>
+          <td><div class="category-list">${categoryBadges}</div></td>
           <td><span class="badge ${badgeClass}">${book.availableCopies} / ${book.totalCopies}</span></td>
           <td class="actions-cell">
             <button class="btn btn-outline btn-sm" onclick="viewBook('${book._id}')">View</button>
@@ -243,13 +270,16 @@ function renderBooks() {
 window.viewBook = async function viewBook(id) {
   try {
     const { data: b } = await api(`/books/${id}`);
+    const categoryBadges = getBookCategories(b)
+      .map((c) => `<span class="badge badge-amber">${escapeHtml(c)}</span>`)
+      .join(' ');
     openModal(
       b.title,
       `
         <div class="stack">
           <p><strong>Author:</strong> ${escapeHtml(b.author)}</p>
           <p><strong>ISBN:</strong> ${escapeHtml(b.isbn)}</p>
-          <p><strong>Category:</strong> ${escapeHtml(b.category)}</p>
+          <p><strong>Categories / Genres:</strong> ${categoryBadges}</p>
           <p><strong>Published Year:</strong> ${b.publishedYear || '—'}</p>
           <p><strong>Copies:</strong> ${b.availableCopies} available of ${b.totalCopies} total</p>
           <p><strong>Description:</strong> ${escapeHtml(b.description || 'No description provided.')}</p>
@@ -263,6 +293,15 @@ window.viewBook = async function viewBook(id) {
 
 window.openBookModal = function openBookModal(id = null) {
   const book = id ? state.books.find((b) => b._id === id) : null;
+  const selected = new Set(book ? getBookCategories(book) : ['General']);
+  const options = [...new Set([...BOOK_CATEGORIES, ...selected])].sort();
+  const categoryOptionsHtml = options
+    .map(
+      (cat) =>
+        `<option value="${escapeHtml(cat)}" ${selected.has(cat) ? 'selected' : ''}>${escapeHtml(cat)}</option>`
+    )
+    .join('');
+
   openModal(
     book ? 'Edit Book' : 'Add New Book',
     `
@@ -270,7 +309,11 @@ window.openBookModal = function openBookModal(id = null) {
         <label class="field"><span>Title</span><input name="title" required value="${escapeHtml(book?.title || '')}" /></label>
         <label class="field"><span>Author</span><input name="author" required value="${escapeHtml(book?.author || '')}" /></label>
         <label class="field"><span>ISBN</span><input name="isbn" required value="${escapeHtml(book?.isbn || '')}" /></label>
-        <label class="field"><span>Category</span><input name="category" required value="${escapeHtml(book?.category || 'General')}" /></label>
+        <label class="field">
+          <span>Categories / Genres</span>
+          <select name="categories" multiple size="5" required>${categoryOptionsHtml}</select>
+          <small class="muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple genres.</small>
+        </label>
         <label class="field"><span>Published Year</span><input name="publishedYear" type="number" min="1000" max="2030" value="${book?.publishedYear || ''}" /></label>
         <label class="field"><span>Total Copies</span><input name="totalCopies" type="number" min="1" required value="${book?.totalCopies || 1}" /></label>
         <div class="field">
@@ -298,12 +341,13 @@ window.openBookModal = function openBookModal(id = null) {
     aiDescBtn.disabled = true;
     aiDescBtn.textContent = 'Generating...';
     try {
+      const selectedCategories = [...bookForm.categories.selectedOptions].map((o) => o.value);
       const res = await api('/ai/book-description', {
         method: 'POST',
         body: JSON.stringify({
           title,
           author,
-          category: bookForm.category.value.trim(),
+          categories: selectedCategories,
           publishedYear: bookForm.publishedYear.value ? Number(bookForm.publishedYear.value) : undefined,
         }),
       });
@@ -320,11 +364,17 @@ window.openBookModal = function openBookModal(id = null) {
   bookForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
+    const selectedCategories = [...form.categories.selectedOptions].map((o) => o.value);
+    if (!selectedCategories.length) {
+      showToast('Select at least one category', 'error');
+      return;
+    }
+
     const payload = {
       title: form.title.value.trim(),
       author: form.author.value.trim(),
       isbn: form.isbn.value.trim(),
-      category: form.category.value.trim(),
+      categories: selectedCategories,
       publishedYear: form.publishedYear.value ? Number(form.publishedYear.value) : undefined,
       totalCopies: Number(form.totalCopies.value),
       description: form.description.value.trim(),

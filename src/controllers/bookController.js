@@ -2,14 +2,22 @@ const Book = require('../models/Book');
 const IssueRecord = require('../models/IssueRecord');
 const { AppError } = require('../middleware/errorHandler');
 
+function normalizeCategories(categories, category) {
+  const raw = categories !== undefined ? categories : category;
+  if (raw === undefined) return undefined;
+  const list = Array.isArray(raw) ? raw : String(raw).split(',');
+  return [...new Set(list.map((c) => String(c).trim()).filter(Boolean))];
+}
+
 async function createBook(req, res, next) {
   try {
-    const { title, author, isbn, category, publishedYear, totalCopies, description } = req.body;
+    const { title, author, isbn, categories, category, publishedYear, totalCopies, description } = req.body;
+    const normalizedCategories = normalizeCategories(categories, category);
     const book = await Book.create({
       title,
       author,
       isbn,
-      category,
+      categories: normalizedCategories,
       publishedYear,
       totalCopies,
       availableCopies: totalCopies,
@@ -32,7 +40,7 @@ async function getBooks(req, res, next) {
       filter.$or = [{ title: regex }, { author: regex }, { isbn: regex }];
     }
     if (category && category !== 'all') {
-      filter.category = category;
+      filter.categories = category;
     }
     if (available === 'true') {
       filter.availableCopies = { $gt: 0 };
@@ -67,7 +75,8 @@ async function updateBook(req, res, next) {
     }
 
     const issuedCount = book.totalCopies - book.availableCopies;
-    const { title, author, isbn, category, publishedYear, totalCopies, description } = req.body;
+    const { title, author, isbn, categories, category, publishedYear, totalCopies, description } = req.body;
+    const normalizedCategories = normalizeCategories(categories, category);
 
     if (totalCopies !== undefined) {
       if (totalCopies < issuedCount) {
@@ -83,7 +92,7 @@ async function updateBook(req, res, next) {
     if (title !== undefined) book.title = title;
     if (author !== undefined) book.author = author;
     if (isbn !== undefined) book.isbn = isbn;
-    if (category !== undefined) book.category = category;
+    if (normalizedCategories !== undefined) book.categories = normalizedCategories;
     if (publishedYear !== undefined) book.publishedYear = publishedYear;
     if (description !== undefined) book.description = description;
 
