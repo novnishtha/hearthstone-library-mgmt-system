@@ -376,6 +376,21 @@ th {
   flex-wrap: wrap;
 }
 
+.category-list {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+select[multiple] {
+  padding: 0.35rem;
+}
+
+select[multiple] option {
+  padding: 0.3rem 0.45rem;
+  border-radius: 5px;
+}
+
 .badge {
   display: inline-block;
   padding: 0.18rem 0.55rem;
