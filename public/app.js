@@ -186,11 +186,13 @@ const BOOK_CATEGORIES = [
   'Technology',
   'Software Engineering',
   'History',
-  'Biography',
   'Fantasy',
   'Mystery',
+  'Thriller',
+  'Action',
   'Philosophy',
   'Literature',
+  'Young Adult',
   'Self-Help',
   'General',
 ];
@@ -512,8 +514,8 @@ window.viewBorrowerHistory = async function viewBorrowerHistory(id) {
     const res = await api(`/borrowers/${id}/history`);
     const rows = res.data.length
       ? res.data
-          .map(
-            (r) => `
+        .map(
+          (r) => `
           <tr>
             <td>${escapeHtml(r.book?.title || 'Deleted Book')}</td>
             <td>${formatDate(r.issueDate)}</td>
@@ -522,8 +524,8 @@ window.viewBorrowerHistory = async function viewBorrowerHistory(id) {
             <td><span class="badge ${r.status === 'returned' ? 'badge-sage' : 'badge-amber'}">${r.status}</span></td>
           </tr>
         `
-          )
-          .join('')
+        )
+        .join('')
       : '<tr><td colspan="5" class="muted">No issue history yet.</td></tr>';
 
     openModal(
@@ -571,15 +573,15 @@ function populateIssueDropdowns() {
   const availableBooks = state.books.filter((b) => b.availableCopies > 0);
   bookSelect.innerHTML = availableBooks.length
     ? availableBooks
-        .map((b) => `<option value="${b._id}">${escapeHtml(b.title)} (${b.availableCopies} avail)</option>`)
-        .join('')
+      .map((b) => `<option value="${b._id}">${escapeHtml(b.title)} (${b.availableCopies} avail)</option>`)
+      .join('')
     : '<option value="">No books available</option>';
 
   const activeBorrowers = state.borrowers.filter((b) => b.isActive);
   borrowerSelect.innerHTML = activeBorrowers.length
     ? activeBorrowers
-        .map((b) => `<option value="${b._id}">${escapeHtml(b.name)} (${escapeHtml(b.membershipId)})</option>`)
-        .join('')
+      .map((b) => `<option value="${b._id}">${escapeHtml(b.name)} (${escapeHtml(b.membershipId)})</option>`)
+      .join('')
     : '<option value="">No active borrowers</option>';
 }
 
